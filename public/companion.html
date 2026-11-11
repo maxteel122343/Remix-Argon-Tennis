@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Argon Tennis • Pocket Racket</title>
+  <style>
+    :root {
+      --font: "Rounded Mplus 1c", "Nunito", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: var(--font);
+      background: radial-gradient(circle at 50% 20%, #1d4e89 0%, #0b192c 65%, #060d18 100%);
+      color: #fff;
+      touch-action: none;
+    }
+    .wrap {
+      display: flex; flex-direction: column; justify-content: space-between;
+      height: 100%; max-width: 460px; margin: 0 auto; padding: 16px 16px 20px; gap: 12px;
+    }
+    .header {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.22);
+      padding: 10px 14px; border-radius: 16px;
+    }
+    .brand { font-size: 17px; font-weight: 900; letter-spacing: -0.01em; }
+    .brand span { color: #5cc8ff; font-style: italic; }
+    .room-pill {
+      font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+      background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(74, 222, 128, 0.55); color: #bbf7d0;
+    }
+    .room-pill.offline {
+      background: rgba(245, 158, 11, 0.2); border-color: rgba(251, 191, 36, 0.6); color: #fde68a;
+    }
+    .sensor-btn {
+      width: 100%; padding: 12px 16px; border-radius: 999px; border: 2px solid #ffffff;
+      background: linear-gradient(180deg, #7be0ff, #1a94eb 55%, #0068c9);
+      color: #fff; font-family: var(--font); font-size: 15px; font-weight: 900;
+      box-shadow: 0 6px 18px rgba(0, 110, 220, 0.45); cursor: pointer;
+    }
+    .sensor-btn.active {
+      background: linear-gradient(180deg, #4ade80, #16a34a);
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.45);
+    }
+    .shot-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    }
+    .shot-chip {
+      padding: 9px 4px; border-radius: 11px; border: 1.5px solid rgba(255, 255, 255, 0.28);
+      background: rgba(15, 25, 40, 0.72); color: #dbeafe;
+      font-family: var(--font); font-size: 12px; font-weight: 900; cursor: pointer;
+    }
+    .shot-chip.active {
+      background: linear-gradient(180deg, #fde047, #eab308);
+      border-color: #fff; color: #1c1917;
+    }
+    .swing-pad {
+      flex: 1; min-height: 220px; border-radius: 26px;
+      border: 2.5px solid rgba(123, 224, 255, 0.6);
+      background: radial-gradient(circle at 50% 45%, rgba(36, 164, 245, 0.26), rgba(10, 22, 38, 0.88));
+      box-shadow: inset 0 0 36px rgba(56, 189, 248, 0.2), 0 10px 28px rgba(0, 0, 0, 0.45);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px; position: relative; overflow: hidden;
+    }
+    .swing-pad.flash {
+      border-color: #fde047;
+      background: radial-gradient(circle at 50% 45%, rgba(250, 204, 21, 0.42), rgba(10, 22, 38, 0.9));
+    }
+    .racket-ring {
+      width: 96px; height: 118px; border-radius: 50%;
+      border: 4px solid #7be0ff; margin-bottom: 14px; position: relative;
+      box-shadow: 0 0 20px rgba(123, 224, 255, 0.45);
+      transition: transform 0.08s linear;
+    }
+    .racket-ring::after {
+      content: ""; position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%);
+      width: 8px; height: 24px; border-radius: 4px; background: #fff;
+    }
+    .pad-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+    .pad-sub { font-size: 13px; font-weight: 700; color: #bae6fd; max-width: 260px; line-height: 1.35; }
+    .feedback-toast {
+      margin-top: 12px; min-height: 24px; font-size: 15px; font-weight: 900; color: #fde047;
+      letter-spacing: 0.03em;
+    }
+    .quick-actions {
+      display: grid; grid-template-columns: 1fr 1.35fr; gap: 10px;
+    }
+    .action-btn {
+      padding: 14px 12px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.8);
+      font-family: var(--font); font-size: 15px; font-weight: 900; color: #fff; cursor: pointer;
+    }
+    .btn-toss { background: linear-gradient(180deg, #38bdf8, #0284c7); }
+    .btn-swing { background: linear-gradient(180deg, #84cc16, #4d7c0f); }
+    .warning-banner {
+      padding: 12px 14px; border-radius: 14px; background: rgba(220, 38, 38, 0.28);
+      border: 1.5px solid rgba(248, 113, 113, 0.75); font-size: 13px; font-weight: 800;
+      text-align: center; color: #fecaca;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">Argon <span>Pocket Racket</span></div>
+      <div id="status-pill" class="room-pill offline">Connecting…</div>
+    </div>
+
+    <div id="invalid-room-banner" class="warning-banner hidden">
+      No session room code in URL. Please open Phone Controller on your desktop court and scan the QR code again.
+    </div>
+
+    <button id="btn-sensors" type="button" class="sensor-btn">Enable Motion Swing Sensors</button>
+
+    <div class="shot-row" id="shot-row">
+      <button type="button" class="shot-chip active" data-shot="topspin">TOPSPIN</button>
+      <button type="button" class="shot-chip" data-shot="slice">SLICE</button>
+      <button type="button" class="shot-chip" data-shot="lob">LOB</button>
+      <button type="button" class="shot-chip" data-shot="smash">SMASH</button>
+    </div>
+
+    <div id="swing-pad" class="swing-pad">
+      <div id="racket-ring" class="racket-ring"></div>
+      <div class="pad-title" id="role-title">SWING OR SWIPE</div>
+      <div class="pad-sub">Flick upward to Toss Serve, swipe across to aim Forehand/Backhand, or swing your phone!</div>
+      <div class="feedback-toast" id="feedback-toast">Ready on Court</div>
+    </div>
+
+    <div class="quick-actions">
+      <button id="btn-toss" type="button" class="action-btn btn-toss">Serve Toss ↑</button>
+      <button id="btn-swing" type="button" class="action-btn btn-swing">Power Swing 🎾</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const rawRoom = (params.get('room') || '').trim().toUpperCase();
+      const room = rawRoom && rawRoom !== 'DEFAULT' ? rawRoom : '';
+      const role = (params.get('role') || 'p1').trim().toLowerCase() === 'p2' ? 'p2' : 'p1';
+
+      const statusPill = document.getElementById('status-pill');
+      const invalidBanner = document.getElementById('invalid-room-banner');
+      const btnSensors = document.getElementById('btn-sensors');
+      const swingPad = document.getElementById('swing-pad');
+      const racketRing = document.getElementById('racket-ring');
+      const roleTitle = document.getElementById('role-title');
+      const feedbackToast = document.getElementById('feedback-toast');
+      const btnToss = document.getElementById('btn-toss');
+      const btnSwing = document.getElementById('btn-swing');
+
+      roleTitle.textContent = (role === 'p2' ? 'PLAYER 2' : 'PLAYER 1') + ' • SWING PAD';
+
+      if (!room) {
+        invalidBanner.classList.remove('hidden');
+        statusPill.textContent = 'Scan Desktop QR';
+        return;
+      }
+
+      let shotType = 'topspin';
+      let orientation = { pitch: 0, roll: 0, yaw: 0, accelMag: 0 };
+      let sensorsEnabled = false;
+      let lastSwingAt = 0;
+      let lastFeedbackSeq = 0;
+      let telemetryTimer = null;
+
+      document.querySelectorAll('#shot-row .shot-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#shot-row .shot-chip').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          shotType = btn.getAttribute('data-shot') || 'topspin';
+        });
+      });
+
+      function flashPad(label) {
+        feedbackToast.textContent = label;
+        swingPad.classList.add('flash');
+        setTimeout(() => swingPad.classList.remove('flash'), 200);
+        if (navigator.vibrate) {
+          try { navigator.vibrate(28); } catch (_) {}
+        }
+      }
+
+      async function sendSwing(payload) {
+        const now = Date.now();
+        if (now - lastSwingAt < 220) return;
+        lastSwingAt = now;
+        const body = {
+          room,
+          role,
+          type: payload.type || 'swing',
+          side: payload.side || null,
+          shotType: payload.shotType || shotType,
+          speed: payload.speed || 1.2,
+          angleX: payload.angleX || 0,
+          dirX: payload.angleX || 0,
+          dirY: payload.dirY ?? -0.45,
+          pitch: orientation.pitch,
+          roll: orientation.roll,
+          yaw: orientation.yaw,
+          timestamp: now,
+          source: 'phone',
+        };
+        flashPad(body.type === 'toss' ? 'SERVE TOSS ↑' : `${body.shotType.toUpperCase()} SWING!`);
+        try {
+          const resp = await fetch('/api/racket/swing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (resp.ok) {
+            statusPill.textContent = `${room} • Connected ✓`;
+            statusPill.classList.remove('offline');
+          }
+        } catch (err) {
+          console.error('Swing send failed:', err);
+        }
+      }
+
+      async function sendTelemetry() {
+        if (document.visibilityState === 'hidden') return;
+        try {
+          const resp = await fetch('/api/racket/telemetry', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              room,
+              role,
+              connected: true,
+              pitch: orientation.pitch,
+              roll: orientation.roll,
+              yaw: orientation.yaw,
+              accelMag: orientation.accelMag,
+              buttonB: false,
+            }),
+          });
+          if (!resp.ok) {
+            statusPill.textContent = `${room} • Reconnecting`;
+            statusPill.classList.add('offline');
+            return;
+          }
+          const data = await resp.json();
+          statusPill.textContent = `${room} • Connected ✓`;
+          statusPill.classList.remove('offline');
+          if (data.lastFeedback && data.lastFeedback.seq > lastFeedbackSeq) {
+            lastFeedbackSeq = data.lastFeedback.seq;
+            const fb = data.lastFeedback;
+            feedbackToast.textContent = fb.speedKmh
+              ? `${fb.grade} • ${fb.speedKmh} KM/H`
+              : fb.grade;
+            if (navigator.vibrate) {
+              try {
+                navigator.vibrate(fb.kind === 'fault' || fb.kind === 'whiff' ? [20, 35, 20] : [45]);
+              } catch (_) {}
+            }
+          }
+        } catch (err) {
+          statusPill.textContent = `${room} • Offline`;
+          statusPill.classList.add('offline');
+        }
+      }
+
+      function attachMotionListeners() {
+        if (sensorsEnabled) return;
+        sensorsEnabled = true;
+        btnSensors.textContent = 'Motion Sensors Active ✓';
+        btnSensors.classList.add('active');
+
+        window.addEventListener('deviceorientation', (e) => {
+          orientation.pitch = Number((e.beta || 0).toFixed(1));
+          orientation.roll = Number((e.gamma || 0).toFixed(1));
+          orientation.yaw = Number((e.alpha || 0).toFixed(1));
+          const rot = Math.max(-35, Math.min(35, orientation.roll));
+          racketRing.style.transform = `rotate(${rot}deg)`;
+        });
+
+        window.addEventListener('devicemotion', (e) => {
+          const acc = e.acceleration || e.accelerationIncludingGravity;
+          if (!acc) return;
+          const ax = Number(acc.x || 0);
+          const ay = Number(acc.y || 0);
+          const az = Number(acc.z || 0);
+          const mag = Math.hypot(ax, ay, az);
+          orientation.accelMag = Number(mag.toFixed(2));
+          const threshold = e.acceleration ? 13.5 : 22.5;
+          if (mag > threshold) {
+            const isUpwardToss = ay > Math.abs(ax) * 1.25 && az > -4 && mag < threshold * 1.45;
+            const speed = Math.min(1.65, Math.max(0.95, mag / threshold));
+            const angleX = Math.max(-1, Math.min(1, ax / 14));
+            if (isUpwardToss) {
+              sendSwing({ type: 'toss', shotType: 'lob', speed: 1.1, angleX, dirY: -0.9 });
+            } else {
+              sendSwing({ type: 'swing', shotType, speed, angleX, dirY: -0.45 });
+            }
+          }
+        });
+      }
+
+      btnSensors.addEventListener('click', async () => {
+        try {
+          if (
+            typeof DeviceMotionEvent !== 'undefined' &&
+            typeof DeviceMotionEvent.requestPermission === 'function'
+          ) {
+            const res = await DeviceMotionEvent.requestPermission();
+            if (res !== 'granted') return;
+          }
+          if (
+            typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function'
+          ) {
+            await DeviceOrientationEvent.requestPermission().catch(() => {});
+          }
+          attachMotionListeners();
+        } catch (err) {
+          console.error('Motion sensor permission error:', err);
+        }
+      });
+
+      if (
+        typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission !== 'function'
+      ) {
+        attachMotionListeners();
+      }
+
+      let dragStart = null;
+      swingPad.addEventListener('pointerdown', (e) => {
+        dragStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+      });
+      swingPad.addEventListener('pointerup', (e) => {
+        if (!dragStart) return;
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        const dt = Math.max(16, performance.now() - dragStart.t);
+        dragStart = null;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 14) {
+          sendSwing({ type: 'swing', shotType, speed: 1.2, angleX: 0, dirY: -0.45 });
+          return;
+        }
+        const speed = Math.min(1.65, Math.max(0.9, 0.82 + (dist / dt) * 0.45));
+        const angleX = Math.max(-1, Math.min(1, dx / 130));
+        const dirY = Math.max(-1, Math.min(1, dy / 130));
+        if (dy < -55 && Math.abs(dy) > Math.abs(dx) * 1.25) {
+          sendSwing({ type: 'toss', shotType: 'lob', speed: 1.1, angleX, dirY: -0.9 });
+        } else {
+          sendSwing({ type: 'swing', shotType, speed, angleX, dirY });
+        }
+      });
+
+      btnToss.addEventListener('click', () => {
+        sendSwing({ type: 'toss', shotType: 'lob', speed: 1.12, angleX: 0, dirY: -0.9 });
+      });
+      btnSwing.addEventListener('click', () => {
+        sendSwing({ type: 'swing', shotType, speed: 1.32, angleX: 0, dirY: -0.45 });
+      });
+
+      sendTelemetry();
+      telemetryTimer = setInterval(sendTelemetry, 200);
+      window.addEventListener('pagehide', () => {
+        if (telemetryTimer) clearInterval(telemetryTimer);
+      });
+    })();
+  </script>
+</body>
+</html>
